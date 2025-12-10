@@ -69,8 +69,8 @@ def verifier_proposition():
 initialiser_etat_jeu()
 
 # 1. Interface Utilisateur
-st.title("Code Secret 218 🕵️‍♀️")
-st.markdown("Bienvenue ! L'objectif est de déduire le code secret à **trois chiffres** (**218**) en utilisant les indices *Bulls* et *Cows*.")
+st.title("Code Secret *** 🕵️‍♀️")
+st.markdown("Bienvenue ! L'objectif est de déduire le code secret à **trois chiffres** en utilisant les indices *Bulls* et *Cows*.")
 
 st.header("Règles et Indice")
 st.markdown("""
