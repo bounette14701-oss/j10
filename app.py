@@ -1,61 +1,72 @@
 import random
 
+def calculer_bulls_cows(code_secret, proposition):
+    """
+    Calcule le nombre de Bulls (chiffre et position corrects) 
+    et de Cows (chiffre correct, mauvaise position).
+    """
+    bulls = 0
+    cows = 0
+    
+    # Étape 1: Calcul des Bulls
+    # Vérifie si le chiffre est le même ET à la même position
+    for i in range(len(code_secret)):
+        if proposition[i] == code_secret[i]:
+            bulls += 1
+            
+    # Étape 2: Calcul des Cows
+    # Vérifie si le chiffre est dans le code MAIS n'est PAS un Bull
+    for chiffre_prop in proposition:
+        if chiffre_prop in code_secret:
+            # S'il est dans le code, il contribue au décompte total des chiffres corrects.
+            cows += 1
+            
+    # Les Bulls sont comptés dans le décompte des Cows à l'étape 2. 
+    # Pour obtenir les 'vraies' Cows (mal placées), on retire les Bulls.
+    cows = cows - bulls
+            
+    return bulls, cows
+
 def jeu_code_secret():
-    # Le code secret à deviner
+    # Définition du code secret
     code = "218" 
     tentatives = 0
     
-    print("Bienvenue au Code Secret. Le code est un nombre à 3 chiffres.")
+    print("====================================")
+    print("         CODE SECRET 218            ")
+    print("====================================")
+    print("Le code secret est un nombre à 3 chiffres (218).")
+    print("Les indices sont donnés en Bulls (chiffre correct/bonne place) et Cows (chiffre correct/mauvaise place).")
+    
+    # --- AJOUT DE COMPLEXITÉ (Indice initial) ---
+    print("\n--- Indice pour joueurs avancés ---")
+    print("Le chiffre des dizaines (la position du '1') est un chiffre impair.")
+    print("----------------------------------\n")
+
 
     while True:
         tentatives += 1
         
         # Demander la proposition de l'utilisateur
-        proposition = input(f"\nTentative #{tentatives} (3 chiffres) : ")
+        # NOTE : La fonction input() dans les environnements hébergés peut parfois nécessiter un 'Enter' supplémentaire.
+        proposition = input(f"Tentative #{tentatives} > Entrez un nombre à 3 chiffres : ")
         
-        # Vérification de base (à améliorer dans le vrai code)
+        # Validation de l'entrée
         if len(proposition) != 3 or not proposition.isdigit():
-            print("Veuillez entrer un nombre valide à 3 chiffres.")
+            print("Erreur : Veuillez entrer EXACTEMENT trois chiffres (ex: 519).")
             continue
             
-        bulls = 0
-        cows = 0
-
-        # Calcul des Bulls (chiffre ET position corrects)
-        for i in range(3):
-            if proposition[i] == code[i]:
-                bulls += 1
-
-        # Calcul des Cows (chiffre correct, mauvaise position)
-        for p_chiffre in proposition:
-            if p_chiffre in code:
-                # Si le chiffre est dans le code, on vérifie s'il est mal placé (si ce n'est pas un Bull)
-                est_bull = False
-                for i in range(3):
-                    if p_chiffre == code[i] and proposition[i] == code[i]:
-                        est_bull = True
-                        break
-                
-                # Un chiffre ne peut pas être à la fois un Bull et un Cow
-                if not est_bull:
-                    cows += 1
-        
-        # Le calcul de 'cows' est souvent plus simple en soustrayant les Bulls:
-        # cows = (nombre total de chiffres en commun) - bulls
-        
-        total_chiffres_communs = 0
-        for p_chiffre in proposition:
-             if p_chiffre in code:
-                 total_chiffres_communs += 1
-        
-        cows = total_chiffres_communs - bulls
-
+        bulls, cows = calculer_bulls_cows(code, proposition)
 
         if bulls == 3:
-            print(f"\nFélicitations ! Vous avez trouvé le code {code} en {tentatives} tentatives !")
+            print("\n====================================")
+            print(f"Félicitations ! Vous avez trouvé le code {code} en {tentatives} tentatives !")
+            print("====================================")
             break
         else:
-            print(f"Résultat : {bulls} Bulls, {cows} Cows.")
+            print(f"Résultat : {bulls} Bulls, {cows} Cows.\n")
 
-# Lancez la fonction pour jouer
-# jeu_code_secret()
+# --- POINT DE DÉMARRAGE DU PROGRAMME ---
+# Cela garantit que le jeu se lance automatiquement à l'exécution du script.
+if __name__ == "__main__":
+    jeu_code_secret()
