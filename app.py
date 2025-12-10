@@ -1,4 +1,7 @@
-import random
+import streamlit as st
+
+# --- Configuration du Jeu ---
+CODE_SECRET = "218"
 
 def calculer_bulls_cows(code_secret, proposition):
     """
@@ -9,64 +12,100 @@ def calculer_bulls_cows(code_secret, proposition):
     cows = 0
     
     # Étape 1: Calcul des Bulls
-    # Vérifie si le chiffre est le même ET à la même position
     for i in range(len(code_secret)):
         if proposition[i] == code_secret[i]:
             bulls += 1
             
     # Étape 2: Calcul des Cows
-    # Vérifie si le chiffre est dans le code MAIS n'est PAS un Bull
+    total_chiffres_communs = 0
     for chiffre_prop in proposition:
         if chiffre_prop in code_secret:
-            # S'il est dans le code, il contribue au décompte total des chiffres corrects.
-            cows += 1
+            total_chiffres_communs += 1
             
-    # Les Bulls sont comptés dans le décompte des Cows à l'étape 2. 
-    # Pour obtenir les 'vraies' Cows (mal placées), on retire les Bulls.
-    cows = cows - bulls
+    # Les 'vraies' Cows sont les chiffres corrects moins les Bulls (déjà bien placés).
+    cows = total_chiffres_communs - bulls
             
     return bulls, cows
 
-def jeu_code_secret():
-    # Définition du code secret
-    code = "218" 
-    tentatives = 0
+def initialiser_etat_jeu():
+    """Initialise l'état du jeu si ce n'est pas déjà fait."""
+    if 'historique' not in st.session_state:
+        st.session_state.historique = []
+        st.session_state.tentatives = 0
+        st.session_state.jeu_fini = False
+
+def verifier_proposition():
+    """Logiciel de vérification de la proposition du joueur."""
     
-    print("====================================")
-    print("         CODE SECRET 218            ")
-    print("====================================")
-    print("Le code secret est un nombre à 3 chiffres (218).")
-    print("Les indices sont donnés en Bulls (chiffre correct/bonne place) et Cows (chiffre correct/mauvaise place).")
+    # 1. Récupérer la proposition
+    proposition = st.session_state.saisie_joueur
     
-    # --- AJOUT DE COMPLEXITÉ (Indice initial) ---
-    print("\n--- Indice pour joueurs avancés ---")
-    print("Le chiffre des dizaines (la position du '1') est un chiffre impair.")
-    print("----------------------------------\n")
-
-
-    while True:
-        tentatives += 1
+    # 2. Validation
+    if len(proposition) != 3 or not proposition.isdigit():
+        st.error("Veuillez entrer EXACTEMENT trois chiffres (ex: 519).")
+        return
+    
+    # 3. Calcul
+    bulls, cows = calculer_bulls_cows(CODE_SECRET, proposition)
+    st.session_state.tentatives += 1
+    
+    # 4. Enregistrement de l'historique
+    st.session_state.historique.append({
+        "proposition": proposition,
+        "resultat": f"{bulls} Bulls, {cows} Cows"
+    })
+    
+    # 5. Vérification de victoire
+    if bulls == 3:
+        st.session_state.jeu_fini = True
         
-        # Demander la proposition de l'utilisateur
-        # NOTE : La fonction input() dans les environnements hébergés peut parfois nécessiter un 'Enter' supplémentaire.
-        proposition = input(f"Tentative #{tentatives} > Entrez un nombre à 3 chiffres : ")
-        
-        # Validation de l'entrée
-        if len(proposition) != 3 or not proposition.isdigit():
-            print("Erreur : Veuillez entrer EXACTEMENT trois chiffres (ex: 519).")
-            continue
-            
-        bulls, cows = calculer_bulls_cows(code, proposition)
+    # 6. Vider la zone de saisie
+    st.session_state.saisie_joueur = ""
 
-        if bulls == 3:
-            print("\n====================================")
-            print(f"Félicitations ! Vous avez trouvé le code {code} en {tentatives} tentatives !")
-            print("====================================")
-            break
-        else:
-            print(f"Résultat : {bulls} Bulls, {cows} Cows.\n")
 
-# --- POINT DE DÉMARRAGE DU PROGRAMME ---
-# Cela garantit que le jeu se lance automatiquement à l'exécution du script.
-if __name__ == "__main__":
-    jeu_code_secret()
+# --- DÉMARRAGE DE L'APPLICATION STREAMLIT ---
+
+# 0. Initialisation
+initialiser_etat_jeu()
+
+# 1. Interface Utilisateur
+st.title("Code Secret 218 🕵️‍♀️")
+st.markdown("Bienvenue ! L'objectif est de déduire le code secret à **trois chiffres** (**218**) en utilisant les indices *Bulls* et *Cows*.")
+
+st.header("Règles et Indice")
+st.markdown("""
+* **Bulls (Bien placé)** : Chiffre correct **ET** à la bonne position.
+* **Cows (Mal placé)** : Chiffre correct **MAIS** à la mauvaise position.
+* ---
+* **Indice pour joueurs avancés :** Le chiffre des dizaines (la position du '1') est un chiffre impair.
+""")
+
+st.divider()
+
+# 2. Zone de Jeu
+if st.session_state.jeu_fini:
+    st.balloons()
+    st.success(f"🥳 FÉLICITATIONS ! Vous avez trouvé le code {CODE_SECRET} en {st.session_state.tentatives} tentatives.")
+    st.button("Recommencer le jeu", on_click=lambda: st.session_state.clear())
+else:
+    st.subheader(f"Tentative #{st.session_state.tentatives + 1}")
+    
+    # Widget de saisie
+    st.text_input(
+        "Votre proposition (3 chiffres)", 
+        max_chars=3, 
+        key="saisie_joueur", 
+        on_change=verifier_proposition, 
+        placeholder="Ex: 123"
+    )
+    
+    # Bouton de soumission (au cas où l'utilisateur n'utilise pas 'Enter')
+    st.button("Vérifier", on_click=verifier_proposition)
+
+# 3. Affichage de l'Historique
+if st.session_state.historique:
+    st.header("Historique")
+    
+    # Affichage inversé pour voir les dernières tentatives en premier
+    for item in st.session_state.historique[::-1]:
+        st.code(f"Proposition : {item['proposition']} -> Résultat : {item['resultat']}")
